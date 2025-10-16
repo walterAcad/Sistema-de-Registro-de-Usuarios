@@ -5,10 +5,32 @@ const Confirmation = () => {
   const [registrationData] = React.useState(() =>
     JSON.parse(localStorage.getItem("registrationData") || "{}")
   );
-  const handleConfirm = () => {
-    alert("¡Registro completado exitosamente!");
-    localStorage.removeItem("registrationData"); // Limpiar datos
-    navigate("/");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const handleConfirm = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('http://localhost:3001/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(registrationData),
+      });
+
+      if (response.ok) {
+        alert("¡Registro completado exitosamente!");
+        localStorage.removeItem("registrationData"); // Limpiar datos
+        navigate("/");
+      } else {
+        alert("Error al registrar. Por favor intenta de nuevo.");
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert("Error de conexión con el servidor.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   return (
     <div>
@@ -57,13 +79,16 @@ const Confirmation = () => {
         <button
           type="button"
           onClick={handleConfirm}
+          disabled={isSubmitting}
           style={{
             marginRight: "10px",
             backgroundColor: "#28a745",
             color: "white",
+            opacity: isSubmitting ? 0.6 : 1,
+            cursor: isSubmitting ? "not-allowed" : "pointer",
           }}
         >
-          Confirmar Registro
+          {isSubmitting ? "Registrando..." : "Confirmar Registro"}
         </button>
         <Link to="/">
           <button type="button">Cancelar</button>
